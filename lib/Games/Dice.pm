@@ -11,10 +11,6 @@ our @EXPORT_OK = qw( roll roll_array);
 
 # Preloaded methods go here.
 
-# Win32 has crummy built in rand() support
-# So let's use something that's decent and pure perl
-use if $^O eq "MSWin32", 'Math::Random::MT::Perl' => qw(rand);
-
 sub _parse_spec {
     my $line = shift;
     return undef unless $line =~ m{
