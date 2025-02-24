@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use 5.010;
-package Games::Dice;
+package Games::Dice 0.050;
 # ABSTRACT: Perl module to simulate die rolls
 
 require Exporter;
@@ -26,12 +26,12 @@ sub _parse_spec {
                       \d+          # either one or more digits
                     |              # or
                       %            # a percent sign for d% = d100
-                    |              # pr
-                      F            # a F for a fudge dice
+                    |              # or
+                      F|f          # a F for a fudge dice
                    )
                  )
                  (?:               # grouping-only parens
-                   (?<sign>[-+xX*/bB])  # a + - * / b(est) in $2
+                   (?<sign>[-+xX*/bBwW])  # a + - * / b(est) w(orst) in $2
                    (?<offset>\d+)  # an offset in $3
                  )?                # both of those last are optional
                  \s*               # possibly some trailing space (like \n)
@@ -72,6 +72,13 @@ sub roll ($) {
         @throws = sort { $b <=> $a } @throws;  # sort numerically, descending
         @result = @throws[ 0 .. $offset - 1 ]; # pick off the $offset first ones
     }
+    elsif ( $sign eq 'w' ) {
+        $offset = 0       if $offset < 0;
+        $offset = @throws if $offset > @throws;
+
+        @throws = sort { $a <=> $b } @throws;  # sort numerically, ascending
+        @result = @throws[ 0 .. $offset - 1 ]; # pick off the $offset first ones
+    }
     else {
         @result = @throws;
     }
@@ -96,7 +103,7 @@ sub _roll_dice {
     if ( $type eq '%' ) {
         $type = 100;
     }
-    elsif ( $type eq 'F' ) {
+    elsif ( uc $type eq 'F' ) {
         $throw = sub { int( rand 3 ) - 1 };
     }
 
@@ -119,10 +126,18 @@ sub roll_array ($) {
 }
 
 1;
-__END__
+
+=pod
+
+=encoding UTF-8
 
 =head1 NAME
 
+Games::Dice - Perl module to simulate die rolls
+
+=head1 VERSION
+
+version 0.050
 
 =head1 SYNOPSIS
 
@@ -157,7 +172,12 @@ the result to an int after dividing.) Using b in this slot is a little
 different: it's short for "best" and indicates "roll a number of dice,
 but add together only the best few". For example, 5d6b3 rolls five six-
 sided dice and adds together the three best rolls. This is sometimes
-used, for example, in role-playing to give higher averages.
+used, for example, in role-playing to give higher averages. Likewise
+using 'w' in this slot is short for "worst" and indicates "roll a number
+of dice, but add together only the worst few". For example 2d20w1 rolls two
+twenty-sided dice and returns the worst (lower) of the two rolls. This is
+sometimes used in role playing games to do a "roll with disadvantage"
+where you roll twice and take the lower of the two rolls.
 
 Generally, C<roll> probably provides the nicer interface, since it does
 the adding up itself. However, in some situations one may wish to
@@ -173,4 +193,62 @@ anyone wishes to contribute a function along the lines of roll_feng_shui
 to become part of Games::Dice (or to support any other style of die
 rolling), you can contribute it to the author's address, listed below.
 
+=head1 PERL VERSION
+
+This module should work on any version of perl still receiving updates from
+the Perl 5 Porters.  This means it should work on any version of perl released
+in the last two to three years.  (That is, if the most recently released
+version is v5.40, then this module should work on both v5.40 and v5.38.)
+
+Although it may work on older versions of perl, no guarantee is made that the
+minimum required version will not be increased.  The version may be increased
+for any reason, and there is no promise that patches will be accepted to lower
+the minimum required perl.
+
+=head1 NAME
+
+=head1 AUTHORS
+
+=over 4
+
+=item *
+
+Philip Newton <pne@cpan.org>
+
+=item *
+
+Ricardo Signes <cpan@semiotic.systems>
+
+=back
+
+=head1 CONTRIBUTORS
+
+=for stopwords Mario Domgoergen Mark Allen Ricardo Signes
+
+=over 4
+
+=item *
+
+Mario Domgoergen <mdom@taz.de>
+
+=item *
+
+Mark Allen <mrallen1@yahoo.com>
+
+=item *
+
+Ricardo Signes <rjbs@semiotic.systems>
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is Copyright (c) 1999 by Philip Newton.
+
+This is free software, licensed under:
+
+  The MIT (X11) License
+
 =cut
+
+__END__
